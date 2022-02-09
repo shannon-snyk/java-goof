@@ -24,7 +24,11 @@ jobs:
         cache: maven
     - name: Build with Maven
       run: mvn -B package --file pom.xml
+  
     - name: Install Snyk
+    - uses: actions/setup-node@v2
+      with:
+          node-version: '14'
     - run: npm install snyk -g
     - run: snyk -v
     - run: snyk auth ${{ secrets.snyk_token }}
