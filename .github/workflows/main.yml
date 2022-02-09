@@ -24,21 +24,19 @@ jobs:
         cache: maven
     - name: Build with Maven
       run: mvn -B package --file pom.xml
-    - uses: actions/setup-node@v2
-        with:
-          node-version: '14'
+    - name: Install Snyk
     - run: npm install snyk -g
     - run: snyk -v
     - run: snyk auth ${{ secrets.snyk_token }}
 
     - name: install snyk-to-html
-        run: |
+      run: |
           npm install snyk-to-html -g
           snyk test --json | snyk-to-html -o result.html
           mkdir downloads
           cp -v /home/runner/work/java-goof/java-goof/*.html /home/runner/work/java-goof/java-goof/downloads
     - name: Use the Upload Artifact GitHub Action
-        uses: actions/upload-artifact@v2
-        with:
+      uses: actions/upload-artifact@v2
+      with:
           name: results
           path: downloads
