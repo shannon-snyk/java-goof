@@ -1,42 +1,18 @@
-name: Java CI with Maven
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
+name: Snyk Scan
+on: pull_request
 jobs:
-  archive-build-artifacts:
+  security:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK 11
-        uses: actions/setup-java@v2
+      - uses: actions/checkout@master
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/maven@master
+        continue-on-error: true # To make sure that SARIF upload gets called
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          java-version: '11'
-          distribution: 'adopt'
-      - name: Build with Maven
-        run: mvn -B package --file pom.xml
-      - name: run MVN install
-        run: mvn install
-
-      - uses: actions/setup-node@v2
+          args: --sarif-file-output=snyk.sarif
+      - name: Upload result to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v1
         with:
-          node-version: '14'
-      - run: npm install snyk -g
-      - run: snyk -v
-      - run: snyk auth ${{ secrets.snyk_token }}
-
-      - name: install snyk-to-html
-        run: |
-          npm install snyk-to-html -g
-          snyk test --json | snyk-to-html -o result.html
-          mkdir downloads
-          cp -v /home/runner/work/java-goof/java-goof/*.html /home/runner/work/java-goof/java-goof/downloads
-      - name: Use the Upload Artifact GitHub Action
-        uses: actions/upload-artifact@v2
-        with:
-          name: results
-          path: downloads
+          sarif_file: snyk.sarif
